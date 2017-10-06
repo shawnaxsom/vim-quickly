@@ -1,6 +1,6 @@
 " quickly.vim - Quickly jump to files. Cozy :find, :buffer, and :oldfiles replacements.
 " Maintainer:   Shawn Axsom <axs221@gmail.com>
-" Version:      0.0.0
+" Version:      0.0.1
 " License:      MIT
 " Website:      https://github.com/axs221/vim-quickly
 
