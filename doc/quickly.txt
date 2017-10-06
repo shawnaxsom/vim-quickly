@@ -1,0 +1,151 @@
+*quickly.txt*	Quickly jump to files. Cozy up to :find, :buffer, and :oldfiles.
+
+
+Plugin:  Vim-Quickly
+Author:  Shawn Axsom <axs221@gmail.com>
+
+
+Help on using vim-quickly                              *quickly* *vim-quickly*
+
+    Introduction ............................... |quickly-intro|
+    Configuration .............................. |quickly-configuration|
+    Commands ................................... |quickly-commands|
+    Mappings ................................... |quickly-mappings|
+
+==============================================================================
+INTRODUCTION                                                   *quickly-intro*
+
+Vim-Quickly is an implementation of :find, :buffer, and :oldfiles the way I
+would have designed them.
+
+  * Allow fallback when no results are found.
+  * Load results in the Quickfix window if multiple results are found.
+  * Allow multiple search terms in any order.
+  * Don't use fuzzy matching, since it often results in many false positives.
+  * Match each term on full path, without having to use |starstar|.
+  * Extensible, with functions composable and reusable for any file lists.
+
+This plugin is designed to be minimal yet effective. It was written in
+Vimscript with minimal external dependencies (such as "find" on Mac and Linux
+for faster file globbing performance).
+
+It aims to be similar to built-in commands and use mostly built-in features,
+while providing a more comfortable user experience.
+
+
+==============================================================================
+CONFIGURATION                                          *quickly-configuration*
+
+    * |quickly_disable_default_key_mappings|
+
+------------------------------------------------------------------------------
+                                        *quickly_disable_default_key_mappings*
+
+    let g:quickly_disable_default_key_mappings = 1
+
+    Disable default key mappings. See |quickly-mappings|.
+
+
+==============================================================================
+COMMANDS                                                    *quickly-commands*
+
+    * |QuicklyAny|
+    * |QuicklyBuffer|
+    * |QuicklyBufferDelete|
+    * |QuicklyMru|
+    * |QuicklyFind|
+
+------------------------------------------------------------------------------
+                                                                  *QuicklyAny*
+
+    :QuicklyAny <zero or more exact path match terms>
+
+    Jump to file, buffer, or MRU.
+
+    This combines |QuicklyBuffer|, |QuicklyMru|, and |QuicklyFind|.
+
+    A waterfall approach is used with those commands:
+
+      1. Find buffer matching name.
+      2. If no matching buffer, find MRU (:help |oldfiles|) matching name.
+      3. If no matching MRU, find file matching name.
+
+    The waterfall approach is used assuming that:
+
+      * The file you want to jump to is most often a buffer.
+      * If the file isn't loaded as a buffer, it is likely to be recently used.
+      * File search is sometimes necessary. Don't require a separate command.
+      * File search is slow. Don't resort to it if you don't have to.
+
+    nnoremap <c-p> :QuicklyAny<space>
+
+------------------------------------------------------------------------------
+                                                               *QuicklyBuffer*
+
+    :QuicklyBuffer <zero or more exact path match terms>
+
+    Jump to buffer.
+
+    Similar to |:buffer|, but it matches multiple terms in any order.
+
+    If one match is found, edit match in current window.
+    If multiple matches are found, load results into |quickfix| window.
+
+    nnoremap <leader>b :QuicklyBuffer<space>
+
+------------------------------------------------------------------------------
+                                                         *QuicklyBufferDelete*
+
+    :QuicklyBufferDelete <zero or more exact path match terms>
+
+    Delete all buffers matching patterns.
+
+    Similar to |:bdelete|, but it matches multiple terms in any order.
+
+    nnoremap <leader><leader>c :QuicklyBufferDelete<space>
+
+------------------------------------------------------------------------------
+                                                                  *QuicklyMru*
+
+    :QuicklyMru <zero or more exact path match terms>
+
+    Jump to MRU file found in |oldfiles|.
+
+    Similar to |:oldfiles|, but it matches multiple terms in any order.
+
+    If one match is found, edit match in current window.
+    If multiple matches are found, load results into |quickfix| window.
+
+    nnoremap <leader>o :QuicklyMru<space>
+
+------------------------------------------------------------------------------
+                                                                 *QuicklyFind*
+
+    :QuicklyFind <zero or more exact path match terms>
+
+    Jump to file by executing *nix 'find' command.
+
+    Similar to |:find|, but it matches multiple terms in any order.
+
+    If one match is found, edit match in current window.
+    If multiple matches are found, load results into |quickfix| window.
+
+    nnoremap <leader>f :QuicklyFind<space>
+
+==============================================================================
+MAPPINGS                                                    *quickly-mappings*
+
+Default mappings are:
+
+    nnoremap <leader><leader>c :QuicklyBufferDelete<space>
+    nnoremap <leader>b :QuicklyBuffer<space>
+    nnoremap <leader>o :QuicklyMru<space>
+    nnoremap <leader>f :QuicklyFind<space>
+    nnoremap <leader>p :QuicklyAny<space>
+    nnoremap <c-p> :QuicklyAny<space>
+
+Default mappings can be disabled with:
+
+    let g:quickly_disable_default_key_mappings = 1
+
+==============================================================================
