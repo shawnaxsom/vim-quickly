@@ -169,7 +169,10 @@ command! -nargs=* -complete=customlist,AnyComplete QuicklyAny call AnyQuickfixOr
 " -----------------------------------------------------------------------------------------
 "  Default Key Mappings
 " -----------------------------------------------------------------------------------------
-if g:quickly_disable_default_key_mappings != 1
+let g:quickly_enable_default_key_mappings =
+      \ get( g:, 'quickly_enable_default_key_mappings', 1 )
+
+if g:quickly_enable_default_key_mappings == 1
   nnoremap <leader><leader>c :QuicklyBufferDelete<space>
   nnoremap <leader>b :QuicklyBuffer<space>
   nnoremap <leader>o :QuicklyMru<space>
