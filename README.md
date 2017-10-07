@@ -136,6 +136,20 @@ Default mappings can be disabled with:
     let g:quickly_enable_default_key_mappings = 0
 
 
+Configuration
+-------------
+
+```vim
+    " Jump to first result on pressing <Enter>, even with multiple matches.
+    let g:quickly_always_jump_to_first_result = 1
+
+    " Open |quickfix| window when there are multiple matches.
+    let g:quickly_open_quickfix_window = 1
+
+    " Enable default key mappings. See |quickly-mappings|.
+    let g:quickly_enable_default_key_mappings = 1
+```
+
 Reusability
 -----------
 

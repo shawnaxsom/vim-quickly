@@ -5,6 +5,20 @@
 " Website:      https://github.com/axs221/vim-quickly
 
 " -----------------------------------------------------------------------------------------
+"  Options
+" -----------------------------------------------------------------------------------------
+
+" Enable default key mappings
+let g:quickly_enable_default_key_mappings = get(g:, 'quickly_enable_default_key_mappings', 1)
+
+" Jump to first result even if there are multiple matches.
+let g:quickly_always_jump_to_first_result = get(g:, 'quickly_always_jump_to_first_result', 0)
+
+" Open quickfix window when there are multiple matches.
+let g:quickly_open_quickfix_window = get(g:, 'quickly_open_quickfix_window', 1)
+
+
+" -----------------------------------------------------------------------------------------
 "  Dedup - Remove duplicates from an array.
 "          Preserve order. Keep duplicate with lowest index.
 " -----------------------------------------------------------------------------------------
@@ -30,6 +44,9 @@ function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
   endfor
 
   let lines = Dedup(lines)
+
+  " Filter out current file
+  let lines = filter(lines, 'v:val != expand("%")')
 
   return lines
 endfunction
@@ -63,12 +80,17 @@ function! QuickfixOrGotoFile (lines, arg)
   let lines = GetMatches(a:lines, a:arg)
 
   if len(lines) > 0
-    if len(lines) == 1
+    if len(lines) == 1 || g:quickly_always_jump_to_first_result == 1
       execute 'e ' . lines[0]
-    else
+    endif
+
+    if len(lines) > 1
       let data = map(copy(lines), '{"filename": v:val, "text": "", "lnum": ""}')
       call setqflist(data)
-      copen
+
+      if g:quickly_open_quickfix_window == 1
+        copen
+      endif
     endif
   endif
 endfunction
@@ -79,9 +101,11 @@ endfunction
 " -----------------------------------------------------------------------------------------
 function! MruLines ()
   return extend(
-    \ filter(copy(v:oldfiles),
+    \ map(filter(range(1, bufnr('$')), 'bufloaded(v:val)'), 'bufname(v:val)'),
+    \ extend(
+    \   filter(copy(v:oldfiles),
     \        "v:val !~ 'fugitive:\\|NERD_tree\\|^/tmp/\\|.git/'"),
-    \ map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)'))
+    \   map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)')))
 endfunction
 function! MruComplete (ArgLead, CmdLine, CursorPos)
   return ListComplete(MruLines(), a:ArgLead, a:CmdLine, a:CursorPos)
@@ -96,7 +120,8 @@ command! -nargs=* -complete=customlist,MruComplete QuicklyMru call MruQuickfixOr
 "  :QuicklyBufferDelete
 " -----------------------------------------------------------------------------------------
 function! BufferLines ()
-  return map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)')
+  return extend(map(filter(range(1, bufnr('$')), 'bufloaded(v:val)'), 'bufname(v:val)'),
+    \ map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)'))
 endfunction
 function! BufferComplete (ArgLead, CmdLine, CursorPos)
   return ListComplete(BufferLines(), a:ArgLead, a:CmdLine, a:CursorPos)
@@ -174,9 +199,6 @@ command! -nargs=* -complete=customlist,AnyComplete QuicklyAny call AnyQuickfixOr
 " -----------------------------------------------------------------------------------------
 "  Default Key Mappings
 " -----------------------------------------------------------------------------------------
-let g:quickly_enable_default_key_mappings =
-      \ get( g:, 'quickly_enable_default_key_mappings', 1 )
-
 if g:quickly_enable_default_key_mappings == 1
   nnoremap <leader><leader>c :QuicklyBufferDelete<space>
   nnoremap <leader>b :QuicklyBuffer<space>

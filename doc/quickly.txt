@@ -36,14 +36,40 @@ while providing a more comfortable user experience.
 ==============================================================================
 CONFIGURATION                                          *quickly-configuration*
 
+    * |quickly_always_jump_to_first_result|
+    * |quickly_open_quickfix_window|
     * |quickly_disable_default_key_mappings|
 
+
 ------------------------------------------------------------------------------
-                                        *quickly_disable_default_key_mappings*
+                                        *quickly_always_jump_to_first_result*
 
-    let g:quickly_disable_default_key_mappings = 1
+    Jump to first result on pressing <Enter>, even with multiple matches.
 
-    Disable default key mappings. See |quickly-mappings|.
+    Default:
+
+        let g:quickly_always_jump_to_first_result = 0
+
+
+------------------------------------------------------------------------------
+                                        *quickly_open_quickfix_window*
+
+
+    Open |quickfix| window when there are multiple matches.
+
+    Default:
+
+        let g:quickly_open_quickfix_window = 1
+
+
+------------------------------------------------------------------------------
+                                        *quickly_enable_default_key_mappings*
+
+    Enable default key mappings. See |quickly-mappings|.
+
+    Default:
+
+        let g:quickly_enable_default_key_mappings = 1
 
 
 ==============================================================================
