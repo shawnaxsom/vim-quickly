@@ -200,3 +200,25 @@ endfunction
 command! -nargs=* -complete=customlist,WhatChangedComplete QuicklyWhatChanged call WhatChangedQuickfixOrGotoFile(<q-args>)
 nnoremap <leader>W :QuicklyWhatChanged<space>
 ```
+
+You could then even go on to change :QuicklyAny to also use WhatChanged as another last resort before falling back to the slower QuicklyFind (the one that searches all filenames in your PWD)
+
+```vim
+" Override AnyLines, so that :QuicklyAny will use :QuicklyWhatChanged as a last fallback, before resorting to slow directory search.
+function! AnyLines (ArgLead)
+  let lines = GetMatches(BufferLines(), a:ArgLead)
+
+  if len(lines) == 0
+    let lines = extend(lines, GetMatches(MruLines(), a:ArgLead))
+  endif
+
+  if len(lines) == 0
+    let lines = extend(lines, GetMatches(WhatChangedLines(), a:ArgLead))
+  endif
+
+  if len(lines) == 0
+    let lines = extend(lines, FilesLines(a:ArgLead))
+  endif
+  return lines
+endfunction
+```
