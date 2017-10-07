@@ -183,8 +183,8 @@ function! AnyLines (ArgLead)
   let lines = Dedup(extend(lines, GetMatches(MruLines(), a:ArgLead)))
 
   if len(lines) == 0
-    " Only run FilesLines if no matches from other two? For performance.
-    let lines = extend(lines, FilesLines(a:ArgLead))
+    " Only run FindLines if no matches from other two? For performance.
+    let lines = extend(lines, FindLines(a:ArgLead))
   endif
   return lines
 endfunction
