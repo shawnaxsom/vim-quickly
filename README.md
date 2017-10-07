@@ -189,7 +189,7 @@ Here is an example of showing files recently modified in GitHub from any author.
 
 ```vim
 function! WhatChangedLines (ArgLead)
-  return split(system("git whatchanged --oneline --name-only --pretty=format:"), "\n")
+  return split(system("git whatchanged --oneline --name-only --since='1 month ago' --pretty=format:"), "\n")
 endfunction
 function! WhatChangedComplete (ArgLead, CmdLine, CursorPos)
   return ListComplete(WhatChangedLines(a:ArgLead), a:ArgLead, a:CmdLine, a:CursorPos)

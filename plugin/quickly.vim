@@ -5,10 +5,20 @@
 " Website:      https://github.com/axs221/vim-quickly
 
 " -----------------------------------------------------------------------------------------
-"  Dedup - Remove duplicates from an array
+"  Dedup - Remove duplicates from an array.
+"          Preserve order. Keep duplicate with lowest index.
 " -----------------------------------------------------------------------------------------
 function! Dedup (lines)
-  return filter(copy(a:lines), 'index(a:lines, v:val, v:key+1)==-1')
+  echom string(a:lines)
+  echom string(index(a:lines, 'b', 2))
+  " Reverse lines, to ensure first result is the one kept.
+  " (index() looks for matches after current position)
+  let lines = reverse(copy(a:lines))
+  " Filter mutates state. Compare with cloned list,
+  " otherwise (['b', 'b', 'a', 'b']) == ['b', 'b', 'a']
+  let reverselines = reverse(copy(a:lines))
+  let filtered = filter(lines, 'index(reverselines, v:val, v:key+1)==-1')
+  return reverse(filtered)
 endfunction
 
 " -----------------------------------------------------------------------------------------
@@ -21,13 +31,17 @@ function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
     let lines = filter(lines, 'v:val =~ "' . word . '"')
   endfor
 
+  echom string(lines)
+
   let lines = Dedup(lines)
+
+  echom string(lines)
 
   return lines
 endfunction
 
 " -----------------------------------------------------------------------------------------
-"  GetMatches -
+"  GetMatches - Filter lines by one or more arguments
 " -----------------------------------------------------------------------------------------
 function! GetMatches (lines, arg)
   " Good resources for some of the code here:
