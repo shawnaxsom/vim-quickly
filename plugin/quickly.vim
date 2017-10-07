@@ -1,6 +1,6 @@
 " quickly.vim - Quickly jump to files. Cozy :find, :buffer, and :oldfiles replacements.
 " Maintainer:   Shawn Axsom <axs221@gmail.com>
-" Version:      0.0.1
+" Version:      0.0.2
 " License:      MIT
 " Website:      https://github.com/axs221/vim-quickly
 
@@ -163,7 +163,18 @@ function! FindLines (ArgLead)
   let firstArg = split(a:ArgLead, ' ')[0]
   " Limit to just JavaScript for now, and don't include folders
   let excludeFolders = '-not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/bower_components/*"'
-  let lines = split(system("find . -path '*" . firstArg . "*' -type f " . excludeFolders), '\n')
+
+
+  if executable('ag')
+    let lines = split(system("ag --nocolor --nogroup --hidden -g " . firstArg), '\n')
+  elseif executable('rg')
+    let lines = split(system("rg --files --hidden --glob '*" . firstArg . "*'"), '\n')
+  elseif executable('find')
+    let lines = split(system("find . -path '*" . firstArg . "*' -type f " . excludeFolders), '\n')
+  else
+    let lines = globpath('.', '**/*' . firstArg . '*', 0, 1)
+  endif
+
   return lines
 endfunction
 function! FindComplete (ArgLead, CmdLine, CursorPos)
