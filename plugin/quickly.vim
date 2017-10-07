@@ -29,11 +29,7 @@ function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
     let lines = filter(lines, 'v:val =~ "' . word . '"')
   endfor
 
-  echom string(lines)
-
   let lines = Dedup(lines)
-
-  echom string(lines)
 
   return lines
 endfunction
