@@ -60,6 +60,65 @@ And finally, to keep those buffers tidy, a convenience command is added to delet
 ```
 
 
+Example
+-------
+Given the following files:
+
+    ~/projects/web/src/routes/todos/list/edit.js
+    ~/projects/web/src/routes/todos/list/view.js
+
+Make sure you are in the working directory:
+
+```vim
+  :cd ~/projects/web/
+```
+
+You can quickly jump to the edit file like so:
+
+```vim
+  :QuicklyFind edit todo route<TAB>
+```
+
+Or for multiple matches, it will populate the quickfix window:
+
+```vim
+  :QuicklyFind todo route<TAB>
+  :cnext
+  :cprev
+  :cclose
+  :copen
+  :map ]c :cnext<CR>
+  :map [c :cprev<CR>
+```
+
+After exiting Vim, if you want to revisit the file (assuming :oldfiles is set up correctly utilizing your ShaDa or viminfo file)
+
+```vim
+  :QuicklyMru edit todo route<TAB>
+```
+
+Or, if you use mksession, vim-workspace, vim-obsession, or the like, the buffer might still be loaded to jump to as well:
+
+```vim
+  :QuicklyBuffer edit todo route<TAB>
+```
+
+And, lets say you move on to a new task, and todo routes are no longer relevant to you:
+
+```vim
+  :QuicklyBufferDelete todo route
+```
+
+
+Best of all, you can combine the Buffer / MRU / Find commands with QuicklyAny
+
+```vim
+  :QuicklyAny edit todo route<TAB>
+```
+
+QuicklyAny will stop at Buffer or MRU results if any results are found, to avoid the slower Find command.
+
+
 Mappings
 --------
 
@@ -74,7 +133,7 @@ Default mappings are:
 
 Default mappings can be disabled with:
 
-    let g:quickly_disable_default_key_mappings = 1
+    let g:quickly_enable_default_key_mappings = 0
 
 
 Reusability
@@ -86,4 +145,41 @@ Look at the quickly.vim file for the commands:
 
     ~/.vim/bundle/vim-quickly/plugin/quickly.vim
 
+There you will find the main commands, along with useful, simple helper functions.
+
+* ListComplete - Runs after pressing <Tab>, provide it an array of filepaths and arguments to filter with
+* QuickfixOrGotoFile - Runs after pressing <Enter>, provide it an array similarly, and it will edit single results, or populate the quickfix window.
+
+Below is an example of a custom command.
+
+Try it out!
+
+Lets assume you are a dork with a markdown file of habits you are working on in your $HOME, that will jump you to that file.
+
+```bash
+$ touch ~/habits.scratch.md
+```
+
+Then:
+
+1. Add the code below to your .vimrc or init.vim.
+2. :source ~/.vimrc or :source ~/.config/nvim/init.vim
+3. Try: :QuicklyFavoriteFiles habit md<TAB>
+4. Try: <leader>F habit md<TAB>
+
+
+```vim
+function! FavoriteFilesLines ()
+  " List of my favoritest files in the world.
+  return ['~/codi/codi.js', '~/habits.scratch.md']
+endfunction
+function! FavoriteFilesComplete (ArgLead, CmdLine, CursorPos)
+  return ListComplete(FavoriteFilesLines(), a:ArgLead, a:CmdLine, a:CursorPos)
+endfunction
+function! FavoriteFilesQuickfixOrGotoFile (arg)
+  call QuickfixOrGotoFile(FavoriteFilesLines(), a:arg)
+endfunction
+command! -nargs=* -complete=customlist,FavoriteFilesComplete QuicklyFavoriteFiles call FavoriteFilesQuickfixOrGotoFile(<q-args>)
+nnoremap <leader>F :QuicklyFavoriteFiles<space>
+```
 

@@ -146,6 +146,6 @@ Default mappings are:
 
 Default mappings can be disabled with:
 
-    let g:quickly_disable_default_key_mappings = 1
+    let g:quickly_enable_default_key_mappings = 0
 
 ==============================================================================
