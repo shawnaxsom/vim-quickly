@@ -149,7 +149,8 @@ COMMANDS                                                    *quickly-commands*
 
     :QuicklyFind <zero or more exact path match terms>
 
-    Jump to file by executing *nix 'find' command.
+    Jump to file by using ag, rg, find, or |globpath|, whichever is
+    found first on the system, respectively.
 
     Similar to |:find|, but it matches multiple terms in any order.
 

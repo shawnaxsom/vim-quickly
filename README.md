@@ -39,7 +39,9 @@ The all-in-one jump command is:
   :QuicklyAny SOME FILE PATTERNS<TAB>
 ```
 
-_QuicklyAny_ will search Buffers, then MRU, and then fall back to a slower :!find <term> command if nothing was found yet.
+_QuicklyAny_ will search Buffers, then MRU, and then fall back to standard file search if no matches are found.
+
+QuicklyAny (and QuicklyFind) will use ag, rg, or find, if those commands exist on the system. Otherwise, the built-in (but slower) globpath() is used.
 
 The file patterns can be in any order. Search is NOT fuzzy (for faster performance and less false positives). File patterns can match file name or path.
 
