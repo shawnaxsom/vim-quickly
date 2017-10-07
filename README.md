@@ -188,14 +188,15 @@ Even better, we can use the results of system commands.
 Here is an example of showing files recently modified in GitHub from any author. You could always modify the parameters as you like, limiting to just your user. Or you could use input() to prompt for the time range.
 
 ```vim
-function! RecentlyChangedLines (ArgLead)
+function! WhatChangedLines (ArgLead)
   return split(system("git whatchanged --oneline --name-only --pretty=format:"), "\n")
 endfunction
-function! RecentlyChangedComplete (ArgLead, CmdLine, CursorPos)
-  return ListComplete(RecentlyChangedLines(a:ArgLead), a:ArgLead, a:CmdLine, a:CursorPos)
+function! WhatChangedComplete (ArgLead, CmdLine, CursorPos)
+  return ListComplete(WhatChangedLines(a:ArgLead), a:ArgLead, a:CmdLine, a:CursorPos)
 endfunction
-function! RecentlyChangedQuickfixOrGotoFile (arg)
-  call QuickfixOrGotoFile(RecentlyChangedLines(a:arg), a:arg)
+function! WhatChangedQuickfixOrGotoFile (arg)
+  call QuickfixOrGotoFile(WhatChangedLines(a:arg), a:arg)
 endfunction
-command! -nargs=* -complete=customlist,RecentlyChangedComplete QuicklyRecentlyChanged call RecentlyChangedQuickfixOrGotoFile(<q-args>)
+command! -nargs=* -complete=customlist,WhatChangedComplete QuicklyWhatChanged call WhatChangedQuickfixOrGotoFile(<q-args>)
+nnoremap <leader>W :QuicklyWhatChanged<space>
 ```
