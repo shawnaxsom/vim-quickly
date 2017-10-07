@@ -102,8 +102,8 @@ command! -nargs=* -complete=customlist,BufferComplete QuicklyBuffer call BufferQ
 " -----------------------------------------------------------------------------------------
 "  :QuicklyBufferDelete
 " -----------------------------------------------------------------------------------------
-function! BuffersDelete (arg)
-  let lines = GetMatches(BuffersLines(), a:arg)
+function! BufferDelete (arg)
+  let lines = GetMatches(BufferLines(), a:arg)
 
   if len(lines) > 0
     for line in lines
@@ -111,7 +111,7 @@ function! BuffersDelete (arg)
     endfor
   endif
 endfunction
-command! -nargs=* -complete=customlist,BuffersComplete QuicklyBufferDelete call BuffersDelete(<q-args>)
+command! -nargs=* -complete=customlist,BufferComplete QuicklyBufferDelete call BufferDelete(<q-args>)
 
 
 " -----------------------------------------------------------------------------------------
