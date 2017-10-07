@@ -188,14 +188,14 @@ Even better, we can use the results of system commands.
 Here is an example of showing files recently modified in GitHub from any author. You could always modify the parameters as you like, limiting to just your user. Or you could use input() to prompt for the time range.
 
 ```vim
-function! WhatChangedLines (ArgLead)
+function! WhatChangedLines ()
   return split(system("git whatchanged --oneline --name-only --since='1 month ago' --pretty=format:"), "\n")
 endfunction
 function! WhatChangedComplete (ArgLead, CmdLine, CursorPos)
-  return ListComplete(WhatChangedLines(a:ArgLead), a:ArgLead, a:CmdLine, a:CursorPos)
+  return ListComplete(WhatChangedLines(), a:ArgLead, a:CmdLine, a:CursorPos)
 endfunction
 function! WhatChangedQuickfixOrGotoFile (arg)
-  call QuickfixOrGotoFile(WhatChangedLines(a:arg), a:arg)
+  call QuickfixOrGotoFile(WhatChangedLines(), a:arg)
 endfunction
 command! -nargs=* -complete=customlist,WhatChangedComplete QuicklyWhatChanged call WhatChangedQuickfixOrGotoFile(<q-args>)
 nnoremap <leader>W :QuicklyWhatChanged<space>
@@ -207,14 +207,8 @@ You could then even go on to change :QuicklyAny to also use WhatChanged as anoth
 " Override AnyLines, so that :QuicklyAny will use :QuicklyWhatChanged as a last fallback, before resorting to slow directory search.
 function! AnyLines (ArgLead)
   let lines = GetMatches(BufferLines(), a:ArgLead)
-
-  if len(lines) == 0
-    let lines = extend(lines, GetMatches(MruLines(), a:ArgLead))
-  endif
-
-  if len(lines) == 0
-    let lines = extend(lines, GetMatches(WhatChangedLines(), a:ArgLead))
-  endif
+  let lines = Dedup(extend(lines, GetMatches(MruLines(), a:ArgLead)))
+  let lines = Dedup(extend(lines, GetMatches(WhatChangedLines(), a:ArgLead)))
 
   if len(lines) == 0
     let lines = extend(lines, FilesLines(a:ArgLead))

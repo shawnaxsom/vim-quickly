@@ -155,10 +155,7 @@ command! -nargs=* -complete=customlist,FindComplete QuicklyFind call FindQuickfi
 " -----------------------------------------------------------------------------------------
 function! AnyLines (ArgLead)
   let lines = GetMatches(BufferLines(), a:ArgLead)
-
-  if len(lines) == 0
-    let lines = extend(lines, GetMatches(MruLines(), a:ArgLead))
-  endif
+  let lines = Dedup(extend(lines, GetMatches(MruLines(), a:ArgLead)))
 
   if len(lines) == 0
     " Only run FilesLines if no matches from other two? For performance.
