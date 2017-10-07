@@ -9,8 +9,6 @@
 "          Preserve order. Keep duplicate with lowest index.
 " -----------------------------------------------------------------------------------------
 function! Dedup (lines)
-  echom string(a:lines)
-  echom string(index(a:lines, 'b', 2))
   " Reverse lines, to ensure first result is the one kept.
   " (index() looks for matches after current position)
   let lines = reverse(copy(a:lines))
