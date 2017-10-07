@@ -183,3 +183,19 @@ command! -nargs=* -complete=customlist,FavoriteFilesComplete QuicklyFavoriteFile
 nnoremap <leader>F :QuicklyFavoriteFiles<space>
 ```
 
+Even better, we can use the results of system commands.
+
+Here is an example of showing files recently modified in GitHub from any author. You could always modify the parameters as you like, limiting to just your user. Or you could use input() to prompt for the time range.
+
+```vim
+function! RecentlyChangedLines (ArgLead)
+  return split(system("git whatchanged --oneline --name-only --pretty=format:"), "\n")
+endfunction
+function! RecentlyChangedComplete (ArgLead, CmdLine, CursorPos)
+  return ListComplete(RecentlyChangedLines(a:ArgLead), a:ArgLead, a:CmdLine, a:CursorPos)
+endfunction
+function! RecentlyChangedQuickfixOrGotoFile (arg)
+  call QuickfixOrGotoFile(RecentlyChangedLines(a:arg), a:arg)
+endfunction
+command! -nargs=* -complete=customlist,RecentlyChangedComplete QuicklyRecentlyChanged call RecentlyChangedQuickfixOrGotoFile(<q-args>)
+```
