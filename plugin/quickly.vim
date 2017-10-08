@@ -34,6 +34,20 @@ function! Dedup (lines)
 endfunction
 
 " -----------------------------------------------------------------------------------------
+"  Wildignore - Remove lines that match any pattern found in 'set wildignore'
+" -----------------------------------------------------------------------------------------
+function! Wildignore (lines)
+  let lines = a:lines
+
+  for ignorePattern in split(&wildignore, ",")
+    let ignoreRegex = glob2regpat(ignorePattern)
+    let lines = filter(lines, 'v:val !~ "' . ignoreRegex . '"')
+  endfor
+
+  return lines
+endfunction
+
+" -----------------------------------------------------------------------------------------
 "  ListComplete - Completion on pressing <Tab> (or your preferred completion mapping)
 " -----------------------------------------------------------------------------------------
 function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
@@ -47,6 +61,8 @@ function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
 
   " Filter out current file
   let lines = filter(lines, 'v:val != expand("%")')
+
+  let lines = Wildignore(lines)
 
   return lines
 endfunction
@@ -69,6 +85,8 @@ function! GetMatches (lines, arg)
   endfor
 
   let lines = Dedup(lines)
+
+  let lines = Wildignore(lines)
 
   " Remove relative path prefix, not necessary if your path is correct and can
   " lead to duplicates if some have relative path and some don't.
