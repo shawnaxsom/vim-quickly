@@ -176,3 +176,12 @@ Default mappings can be disabled with:
     let g:quickly_enable_default_key_mappings = 0
 
 ==============================================================================
+TIPS                                                            *quickly-tips*
+
+* |wildignore| settings are respected. This allows you to ignore file
+  or folder paths that you know you will never be interested in.
+
+  set wildignore=*.swp,*.bak
+  set wildignore+=*/node_modules/*,*/.git/*,*/.hg/*,*/.svn/*
+
+==============================================================================

@@ -1,13 +1,11 @@
-vim-quickly
-===========
+# vim-quickly
 
 Quickly jump to files. Cozy up to :find, :buffer, and :oldfiles.
 
 Vim-Quickly is designed as a minimal yet powerful solution for jumping to files quickly. It combines the ease-of-use of solutions like [CtrlP](https://github.com/kien/ctrlp.vim) and [FZF](https://github.com/junegunn/fzf.vim), while staying minimal like :find, :buffer, :oldfiles, and :bdelete.
 
 
-Motivation
-----------
+# Motivation
 
 I used to be a die-hard [CtrlP](https://github.com/kien/ctrlp.vim) user. Then [romainl](https://www.reddit.com/user/-romainl-/) finally got through to me. While I disagree with the brash sentiment that plugins are a bad thing, there is something to be said for minimalism and for at least trying out what Vim provides.
 
@@ -30,8 +28,7 @@ While I loved the speed and minimalism, what was missing for me was:
 * Extensible, with functions composable and reusable for any file lists.
 
 
-Usage
------
+# Usage
 
 The all-in-one jump command is:
 
@@ -62,8 +59,7 @@ And finally, to keep those buffers tidy, a convenience command is added to delet
 ```
 
 
-Example
--------
+## Example
 Given the following files:
 
     ~/projects/web/src/routes/todos/list/edit.js
@@ -121,8 +117,7 @@ Best of all, you can combine the Buffer / MRU / Find commands with QuicklyAny
 QuicklyAny will stop at Buffer or MRU results if any results are found, to avoid the slower Find command.
 
 
-Mappings
---------
+# Mappings
 
 Default mappings are:
 
@@ -138,8 +133,7 @@ Default mappings can be disabled with:
     let g:quickly_enable_default_key_mappings = 0
 
 
-Configuration
--------------
+# Configuration
 
 ```vim
     " Jump to first result on pressing <Enter>, even with multiple matches.
@@ -152,8 +146,12 @@ Configuration
     let g:quickly_enable_default_key_mappings = 1
 ```
 
-Reusability
------------
+
+# Tips
+
+* Set up your wildignore settings. Vim-Quickly will respect wildignore to ignore paths to files you are never interested in.
+
+# Reusability
 
 All of the commands use a few simple, reusable methods. Feel free to contribute, or add some of your own commands to your .vimrc or init.vim.
 
