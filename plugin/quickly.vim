@@ -35,6 +35,10 @@ endfunction
 
 " -----------------------------------------------------------------------------------------
 "  Wildignore - Remove lines that match any pattern found in 'set wildignore'
+"               Note that QuicklyFind will also use these patterns, but this
+"               applies across the board for all types of Quickly commands.
+"               It is of course faster to apply the filters earlier on in the
+"               process, but this function acts as a safeguard.
 " -----------------------------------------------------------------------------------------
 function! Wildignore (lines)
   let lines = a:lines
@@ -179,16 +183,32 @@ function! FindLines (ArgLead)
   " but more flexible in ordering of words and subdirectories.
   " Other words get filtered out in QuickfixOrGotoFile()
   let firstArg = split(a:ArgLead, ' ')[0]
-  " Limit to just JavaScript for now, and don't include folders
-  let excludeFolders = '-not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/bower_components/*"'
 
+  if executable('rg')
+    let ignoreClause = ''
+    for ignorePattern in split(&wildignore, ",")
+      let ignoreClause  = ignoreClause . ' --iglob "!' . ignorePattern . '"'
+    endfor
+    let command = "rg --files --hidden --glob '*" . firstArg . "*' " . ignoreClause
 
-  if executable('ag')
-    let lines = split(system("ag --nocolor --nogroup --hidden -g " . firstArg), '\n')
-  elseif executable('rg')
-    let lines = split(system("rg --files --hidden --glob '*" . firstArg . "*'"), '\n')
+    let lines = split(system(command), '\n')
+  elseif executable('ag')
+    let ignoreClause = ''
+    for ignorePattern in split(&wildignore, ",")
+      let ignoreClause  = ignoreClause . ' --ignore "' . ignorePattern . '"'
+    endfor
+    let command = "ag --nocolor --nogroup --hidden -g " . firstArg . " " . ignoreClause
+
+    let lines = split(system(command), '\n')
   elseif executable('find')
-    let lines = split(system("find . -path '*" . firstArg . "*' -type f " . excludeFolders), '\n')
+    let ignoreClause = '-not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/bower_components/*"'
+    for ignorePattern in split(&wildignore, ",")
+      let ignoreClause  = ignoreClause . ' -not -path "' . ignorePattern . '"'
+    endfor
+    let command = "find . -path '*" . firstArg . "*' -type f " . ignoreClause
+    echom command
+
+    let lines = split(system(command), '\n')
   else
     let lines = globpath('.', '**/*' . firstArg . '*', 0, 1)
   endif
