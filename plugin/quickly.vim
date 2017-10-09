@@ -18,11 +18,25 @@ let g:quickly_always_jump_to_first_result = get(g:, 'quickly_always_jump_to_firs
 let g:quickly_open_quickfix_window = get(g:, 'quickly_open_quickfix_window', 1)
 
 
+function! Maybe(str)
+  let str = a:str
+  if !exists('a:str')
+    let str = ''
+  endif
+
+  return str
+endfunction
+
+
 " -----------------------------------------------------------------------------------------
 "  Dedup - Remove duplicates from an array.
 "          Preserve order. Keep duplicate with lowest index.
 " -----------------------------------------------------------------------------------------
 function! Dedup (lines)
+  if !exists("a:lines")
+    return []
+  endif
+
   " Reverse lines, to ensure first result is the one kept.
   " (index() looks for matches after current position)
   let lines = reverse(copy(a:lines))
@@ -56,6 +70,10 @@ endfunction
 "  FilterCurrentFile - Filter out the current filename from the list
 " -----------------------------------------------------------------------------------------
 function! FilterCurrentFile (lines)
+  if !exists("a:lines")
+    return []
+  endif
+
   return filter(a:lines, 'v:val != expand("%")')
 endfunction
 
@@ -178,16 +196,21 @@ command! -nargs=* -complete=customlist,BufferComplete QuicklyBufferDelete call B
 "  :QuicklyFind
 " -----------------------------------------------------------------------------------------
 function! FindLines (ArgLead)
-  if a:ArgLead =~ '\.\/.*' || a:ArgLead =~ '\/.*'
+  let argLead = Maybe(a:ArgLead)
+
+  if argLead =~ '\.\/.*' || argLead =~ '\/.*'
     " User must have used completion, last argument is probably full path
-    let args = split(a:ArgLead, ' ')
+    let args = split(argLead, ' ')
     return [ args[len(args) - 1] ]
   endif
 
   " Just uses the first word if there are multiple. A little slower
   " but more flexible in ordering of words and subdirectories.
   " Other words get filtered out in QuickfixOrGotoFile()
-  let firstArg = split(a:ArgLead, ' ')[0]
+  let firstArg = ''
+  if argLead != ''
+    let firstArg = split(argLead, ' ')[0]
+  endif
 
   if executable('rg')
     let ignoreClause = ''
@@ -211,7 +234,6 @@ function! FindLines (ArgLead)
       let ignoreClause  = ignoreClause . ' -not -path "' . ignorePattern . '"'
     endfor
     let command = "find . -path '*" . firstArg . "*' -type f " . ignoreClause
-    echom command
 
     let lines = split(system(command), '\n')
   else
@@ -221,7 +243,7 @@ function! FindLines (ArgLead)
   return lines
 endfunction
 function! FindComplete (ArgLead, CmdLine, CursorPos)
-  return ListComplete(FindLines(a:ArgLead), a:ArgLead, a:CmdLine, a:CursorPos)
+  return ListComplete(FindLines(Maybe(a:ArgLead)), Maybe(a:ArgLead), Maybe(a:CmdLine), a:CursorPos)
 endfunction
 function! FindQuickfixOrGotoFile (arg)
   call QuickfixOrGotoFile(FindLines(a:arg), a:arg)
