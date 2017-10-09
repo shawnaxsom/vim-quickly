@@ -51,6 +51,14 @@ function! Wildignore (lines)
   return lines
 endfunction
 
+
+" -----------------------------------------------------------------------------------------
+"  FilterCurrentFile - Filter out the current filename from the list
+" -----------------------------------------------------------------------------------------
+function! FilterCurrentFile (lines)
+  return filter(a:lines, 'v:val != expand("%")')
+endfunction
+
 " -----------------------------------------------------------------------------------------
 "  ListComplete - Completion on pressing <Tab> (or your preferred completion mapping)
 " -----------------------------------------------------------------------------------------
@@ -62,10 +70,7 @@ function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
   endfor
 
   let lines = Dedup(lines)
-
-  " Filter out current file
-  let lines = filter(lines, 'v:val != expand("%")')
-
+  let lines = FilterCurrentFile(lines)
   let lines = Wildignore(lines)
 
   return lines
@@ -89,7 +94,7 @@ function! GetMatches (lines, arg)
   endfor
 
   let lines = Dedup(lines)
-
+  let lines = FilterCurrentFile(lines)
   let lines = Wildignore(lines)
 
   " Remove relative path prefix, not necessary if your path is correct and can
