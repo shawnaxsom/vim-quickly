@@ -184,4 +184,19 @@ TIPS                                                            *quickly-tips*
   set wildignore=*.swp,*.bak
   set wildignore+=*/node_modules/*,*/.git/*,*/.hg/*,*/.svn/*
 
+* Change your ShaDa or viminfo settings. QuicklyMru (and therefore MRU within QuicklyAny) both use :oldfiles, which is limited in history length based on ShaDa (for Neovim) or viminfo (for Vim).
+
+  " Tell vim to remember certain things when we exit,
+  " including oldfiles history length
+  "  '250  :  MRU / :oldfiles - marks will be remembered for up to 10 previously edited files
+  "  "100  :  will save up to 100 lines for each register
+  "  :100  :  up to 20 lines of command-line history will be remembered
+  "  %     :  saves and restores the buffer list
+  "  n     : Choose where to store the file
+  if has('nvim')
+    set shada='250,\"100,:100,n~/.vim/shada
+  else
+    set viminfo=\'250,\"100,:100,%
+  endif
+
 ==============================================================================

@@ -149,7 +149,9 @@ Default mappings can be disabled with:
 
 # Tips
 
+* Look at :help vim-quickly. I am keeping that up-to-date the best I can. More details are provided there.
 * Set up your wildignore settings. Vim-Quickly will respect wildignore to ignore paths to files you are never interested in.
+* Change your ShaDa or viminfo settings. QuicklyMru (and therefore MRU within QuicklyAny) both use :oldfiles, which is limited in history length based on ShaDa (for Neovim) or viminfo (for Vim).
 
 # Reusability
 
