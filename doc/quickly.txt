@@ -79,6 +79,8 @@ COMMANDS                                                    *quickly-commands*
     * |QuicklyBuffer|
     * |QuicklyBufferDelete|
     * |QuicklyMru|
+    * |QuicklyMostRecentlyModified|
+    * |QuicklyWhatChanged|
     * |QuicklyFind|
 
 ------------------------------------------------------------------------------
@@ -88,13 +90,15 @@ COMMANDS                                                    *quickly-commands*
 
     Jump to file, buffer, or MRU.
 
-    This combines |QuicklyBuffer|, |QuicklyMru|, and |QuicklyFind|.
+    This combines |QuicklyBuffer|, |QuicklyMru|, |QuicklyMostRecentlyModified|,
+    |QuicklyWhatChanged|, and |QuicklyFind|.
 
     A waterfall approach is used with those commands:
 
       1. Find buffer matching name.
       2. If no matching buffer, find MRU (:help |oldfiles|) matching name.
-      3. If no matching MRU, find file matching name.
+      3. If no matching MRU, find Most Recently Modified.
+      3. If no matching Most Recently Modified, find file matching name.
 
     The waterfall approach is used assuming that:
 
@@ -145,6 +149,36 @@ COMMANDS                                                    *quickly-commands*
     nnoremap <leader>o :QuicklyMru<space>
 
 ------------------------------------------------------------------------------
+                                                 *QuicklyMostRecentlyModified*
+
+    :QuicklyMostRecentlyModified <zero or more exact path match terms>
+
+    Jump to Most Recently Modified file found under current directory.
+
+    Uses file system "find" command based on date modified.
+
+    If one match is found, edit match in current window.
+    If multiple matches are found, load results into |quickfix| window.
+
+    nnoremap <leader>m :QuicklyMostRecentlyModified<space>
+
+------------------------------------------------------------------------------
+                                                 *QuicklyWhatChanged*
+
+    :QuicklyWhatChanged <zero or more exact path match terms>
+
+    Jump to Most Recently Modified file found under current directory, based
+    on Git history.
+
+    Uses "git whatchanged" to get list of changed files. Includes changes from
+    other users.
+
+    If one match is found, edit match in current window.
+    If multiple matches are found, load results into |quickfix| window.
+
+    nnoremap <leader>m :QuicklyWhatChanged<space>
+
+------------------------------------------------------------------------------
                                                                  *QuicklyFind*
 
     :QuicklyFind <zero or more exact path match terms>
@@ -167,6 +201,8 @@ Default mappings are:
     nnoremap <leader><leader>c :QuicklyBufferDelete<space>
     nnoremap <leader>b :QuicklyBuffer<space>
     nnoremap <leader>o :QuicklyMru<space>
+    nnoremap <leader>m :QuicklyMostRecentlyModified<space>
+    nnoremap <leader>W :QuicklyWhatChanged<space>
     nnoremap <leader>f :QuicklyFind<space>
     nnoremap <leader>p :QuicklyAny<space>
     nnoremap <c-p> :QuicklyAny<space>

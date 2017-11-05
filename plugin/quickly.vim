@@ -1,12 +1,12 @@
 " quickly.vim - Quickly jump to files. Cozy :find, :buffer, and :oldfiles replacements.
 " Maintainer:   Shawn Axsom <axs221@gmail.com>
-" Version:      0.0.2
+" Version:      0.0.3
 " License:      MIT
 " Website:      https://github.com/axs221/vim-quickly
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  Options
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 
 " Enable default key mappings
 let g:quickly_enable_default_key_mappings = get(g:, 'quickly_enable_default_key_mappings', 1)
@@ -16,6 +16,9 @@ let g:quickly_always_jump_to_first_result = get(g:, 'quickly_always_jump_to_firs
 
 " Open quickfix window when there are multiple matches.
 let g:quickly_open_quickfix_window = get(g:, 'quickly_open_quickfix_window', 1)
+
+" Location to store file path of MRU file
+let g:quickly_mru_file_path = get(g:, 'quickly_mru_file_path', $HOME."/.quickly_mru")
 
 
 function! Maybe(str)
@@ -28,10 +31,25 @@ function! Maybe(str)
 endfunction
 
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
+"  WithinPwd - Filter out lines that aren't within PWD.
+"              Only absolute paths are filtered.
+" --------------------------------------------------------------
+function! WithinPwd (lines)
+  return filter(a:lines, 'v:val =~ getcwd() || v:val !~ "^\/.*"')
+endfunction
+
+" --------------------------------------------------------------
+"  RelativePath - Truncate PWD, for e.g. absolute paths found in v:oldfiles
+" --------------------------------------------------------------
+function! RelativePath (lines)
+  return map(copy(a:lines), 'substitute(v:val, getcwd() . "/", "", "g")')
+endfunction
+
+" --------------------------------------------------------------
 "  Dedup - Remove duplicates from an array.
 "          Preserve order. Keep duplicate with lowest index.
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! Dedup (lines)
   if !exists("a:lines")
     return []
@@ -47,13 +65,13 @@ function! Dedup (lines)
   return reverse(filtered)
 endfunction
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  Wildignore - Remove lines that match any pattern found in 'set wildignore'
 "               Note that QuicklyFind will also use these patterns, but this
 "               applies across the board for all types of Quickly commands.
 "               It is of course faster to apply the filters earlier on in the
 "               process, but this function acts as a safeguard.
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! Wildignore (lines)
   let lines = a:lines
 
@@ -66,9 +84,9 @@ function! Wildignore (lines)
 endfunction
 
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  FilterCurrentFile - Filter out the current filename from the list
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! FilterCurrentFile (lines)
   if !exists("a:lines")
     return []
@@ -77,9 +95,20 @@ function! FilterCurrentFile (lines)
   return filter(a:lines, 'v:val != expand("%")')
 endfunction
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
+"  FilterBlankLines - Filter out blank lines from an array
+" --------------------------------------------------------------
+function! FilterBlankLines (lines)
+  if !exists("a:lines")
+    return []
+  endif
+
+  return filter(a:lines, 'v:val != ""')
+endfunction
+
+" --------------------------------------------------------------
 "  ListComplete - Completion on pressing <Tab> (or your preferred completion mapping)
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
   let lines = a:lines
 
@@ -89,14 +118,15 @@ function! ListComplete(lines, ArgLead, CmdLine, CursorPos)
 
   let lines = Dedup(lines)
   let lines = FilterCurrentFile(lines)
+  let lines = FilterBlankLines(lines)
   let lines = Wildignore(lines)
 
   return lines
 endfunction
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  GetMatches - Filter lines by one or more arguments
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! GetMatches (lines, arg)
   " Good resources for some of the code here:
   " * https://github.com/junegunn/fzf/issues/301
@@ -141,16 +171,36 @@ function! QuickfixOrGotoFile (lines, arg)
 endfunction
 
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  :QuicklyMru
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
+" function! SaveMru ()
+"   let current_file = expand('%')
+"   if len(current_file) > 0
+"     call system("echo " . current_file . " >> " . g:quickly_mru_file_path)
+"   endif
+" endfunction
+" augroup saveMru
+"   autocmd!
+"   autocmd BufEnter * call SaveMru()
+" augroup END
+function! SaveMru ()
+  let current_file = expand('%:p')
+  if len(current_file) > 0
+    let v:oldfiles = extend([ current_file, ], v:oldfiles)
+  endif
+endfunction
+augroup saveMru
+  autocmd!
+  autocmd BufEnter * call SaveMru()
+augroup END
+
 function! MruLines ()
-  return extend(
-    \ map(filter(range(1, bufnr('$')), 'bufloaded(v:val)'), 'bufname(v:val)'),
-    \ extend(
-    \   filter(copy(v:oldfiles),
-    \        "v:val !~ 'fugitive:\\|NERD_tree\\|^/tmp/\\|.git/'"),
-    \   map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)')))
+  let lines = []
+  let lines = extend(lines, copy(v:oldfiles))
+  let lines = WithinPwd(lines)
+  let lines = RelativePath(lines)
+  return lines
 endfunction
 function! MruComplete (ArgLead, CmdLine, CursorPos)
   return ListComplete(MruLines(), a:ArgLead, a:CmdLine, a:CursorPos)
@@ -161,12 +211,77 @@ endfunction
 command! -nargs=* -complete=customlist,MruComplete QuicklyMru call MruQuickfixOrGotoFile(<q-args>)
 
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
+"  :QuicklyMostRecentlyModified
+" --------------------------------------------------------------
+function! MostRecentlyModifiedLines (ArgLead, Count)
+  let argLead = Maybe(a:ArgLead)
+
+  if argLead =~ '\.\/.*' || argLead =~ '\/.*'
+    " User must have used completion, last argument is probably full path
+    let args = split(argLead, ' ')
+    return [ args[len(args) - 1] ]
+  endif
+
+  let lines = split(system("find . -type d \\( -path ./.git -o -path ./node_modules \\) -prune -o -path '*" . argLead . "*' -print0 | xargs -0 ls -t | head -n " . a:Count), "\n")
+  let lines = WithinPwd(lines)
+  let lines = RelativePath(lines)
+  return lines
+endfunction
+function! MostRecentlyModifiedComplete (ArgLead, CmdLine, CursorPos)
+  return ListComplete(MostRecentlyModifiedLines(Maybe(a:ArgLead), 50), Maybe(a:ArgLead), Maybe(a:CmdLine), a:CursorPos)
+endfunction
+function! MostRecentlyModifiedQuickfixOrGotoFile (arg)
+  call QuickfixOrGotoFile(MostRecentlyModifiedLines(a:arg, 50), a:arg)
+endfunction
+command! -nargs=* -complete=customlist,MostRecentlyModifiedComplete QuicklyMostRecentlyModified call MostRecentlyModifiedQuickfixOrGotoFile(<q-args>)
+
+" --------------------------------------------------------------
+"  :QuicklyWhatChanged
+" --------------------------------------------------------------
+function! WhatChangedLines ()
+  let lines = split(system("git whatchanged --oneline --name-only --since='1 month ago' --pretty=format:"), "\n")
+  if len(lines) == 0
+    let lines = split(system("git whatchanged --oneline --name-only --since='1 year ago' --pretty=format:"), "\n")
+  endif
+
+  let lines = WithinPwd(lines)
+  let lines = RelativePath(lines)
+  return lines
+endfunction
+function! WhatChangedComplete (ArgLead, CmdLine, CursorPos)
+  return ListComplete(WhatChangedLines(), a:ArgLead, a:CmdLine, a:CursorPos)
+endfunction
+function! WhatChangedQuickfixOrGotoFile (arg)
+  call QuickfixOrGotoFile(WhatChangedLines(), a:arg)
+endfunction
+command! -nargs=* -complete=customlist,WhatChangedComplete QuicklyWhatChanged call WhatChangedQuickfixOrGotoFile(<q-args>)
+
+function! AnyLines (ArgLead)
+  let lines = GetMatches(MostRecentlyModifiedLines(a:ArgLead, 5), a:ArgLead)
+  let lines = Dedup(extend(lines, GetMatches(BufferLines(), a:ArgLead)))
+  let lines = Dedup(extend(lines, GetMatches(MruLines(), a:ArgLead)))
+  let lines = Dedup(extend(lines, GetMatches(WhatChangedLines(), a:ArgLead)))
+
+  if len(lines) == 0
+    let lines = extend(lines, FindLines(a:ArgLead))
+  endif
+
+  let lines = WithinPwd(lines)
+  let lines = RelativePath(lines)
+  return lines
+endfunction
+
+" --------------------------------------------------------------
 "  :QuicklyBufferDelete
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! BufferLines ()
-  return extend(map(filter(range(1, bufnr('$')), 'bufloaded(v:val)'), 'bufname(v:val)'),
+  let lines = extend(map(filter(range(1, bufnr('$')), 'bufloaded(v:val)'), 'bufname(v:val)'),
     \ map(filter(range(1, bufnr('$')), 'buflisted(v:val)'), 'bufname(v:val)'))
+
+  let lines = WithinPwd(lines)
+  let lines = RelativePath(lines)
+  return lines
 endfunction
 function! BufferComplete (ArgLead, CmdLine, CursorPos)
   return ListComplete(BufferLines(), a:ArgLead, a:CmdLine, a:CursorPos)
@@ -177,9 +292,9 @@ endfunction
 command! -nargs=* -complete=customlist,BufferComplete QuicklyBuffer call BufferQuickfixOrGotoFile(<q-args>)
 
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  :QuicklyBufferDelete
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! BufferDelete (arg)
   let lines = GetMatches(BufferLines(), a:arg)
 
@@ -192,9 +307,9 @@ endfunction
 command! -nargs=* -complete=customlist,BufferComplete QuicklyBufferDelete call BufferDelete(<q-args>)
 
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  :QuicklyFind
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! FindLines (ArgLead)
   let argLead = Maybe(a:ArgLead)
 
@@ -240,6 +355,8 @@ function! FindLines (ArgLead)
     let lines = globpath('.', '**/*' . firstArg . '*', 0, 1)
   endif
 
+  let lines = WithinPwd(lines)
+  let lines = RelativePath(lines)
   return lines
 endfunction
 function! FindComplete (ArgLead, CmdLine, CursorPos)
@@ -251,17 +368,20 @@ endfunction
 command! -nargs=* -complete=customlist,FindComplete QuicklyFind call FindQuickfixOrGotoFile(<q-args>)
 
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  :QuicklyAny
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 function! AnyLines (ArgLead)
-  let lines = GetMatches(BufferLines(), a:ArgLead)
-  let lines = Dedup(extend(lines, GetMatches(MruLines(), a:ArgLead)))
+  let lines = GetMatches(MruLines(), a:ArgLead)
+  let lines = Dedup(extend(lines, GetMatches(BufferLines(), a:ArgLead)))
 
   if len(lines) == 0
     " Only run FindLines if no matches from other two? For performance.
     let lines = extend(lines, FindLines(a:ArgLead))
   endif
+
+  let lines = WithinPwd(lines)
+  let lines = RelativePath(lines)
   return lines
 endfunction
 function! AnyComplete (ArgLead, CmdLine, CursorPos)
@@ -272,14 +392,16 @@ function! AnyQuickfixOrGotoFile (arg)
 endfunction
 command! -nargs=* -complete=customlist,AnyComplete QuicklyAny call AnyQuickfixOrGotoFile(<q-args>)
 
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 "  Default Key Mappings
-" -----------------------------------------------------------------------------------------
+" --------------------------------------------------------------
 if g:quickly_enable_default_key_mappings == 1
   nnoremap <leader><leader>c :QuicklyBufferDelete<space>
   nnoremap <leader>b :QuicklyBuffer<space>
   nnoremap <leader>o :QuicklyMru<space>
+  nnoremap <leader>m :QuicklyMostRecentlyModified<space>
   nnoremap <leader>f :QuicklyFind<space>
   nnoremap <leader>p :QuicklyAny<space>
+  nnoremap <leader>W :QuicklyWhatChanged<space>
   nnoremap <c-p> :QuicklyAny<space>
 endif

@@ -48,6 +48,8 @@ You can also use the individual mappings:
 ```vim
   :QuicklyBuffer SOME FILE PATTERNS<TAB>
   :QuicklyMru SOME FILE PATTERNS<TAB>
+  :QuicklyMostRecentlyModified SOME FILE PATTERNS<TAB>
+  :QuicklyWhatChanged SOME FILE PATTERNS<TAB>
   :QuicklyFind SOME FILE PATTERNS<TAB>
 ```
 
@@ -124,6 +126,8 @@ Default mappings are:
     nnoremap <leader><leader>c :QuicklyBufferDelete<space>
     nnoremap <leader>b :QuicklyBuffer<space>
     nnoremap <leader>o :QuicklyMru<space>
+    nnoremap <leader>m :QuicklyMostRecentlyModified<space>
+    nnoremap <leader>W :QuicklyWhatChanged<space>
     nnoremap <leader>f :QuicklyFind<space>
     nnoremap <leader>p :QuicklyAny<space>
     nnoremap <c-p> :QuicklyAny<space>
