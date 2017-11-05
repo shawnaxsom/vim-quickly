@@ -174,6 +174,7 @@ endfunction
 " --------------------------------------------------------------
 "  :QuicklyMru
 " --------------------------------------------------------------
+" TODO: Keep using Oldfiles, or add option for project local file?
 " function! SaveMru ()
 "   let current_file = expand('%')
 "   if len(current_file) > 0
@@ -256,21 +257,6 @@ function! WhatChangedQuickfixOrGotoFile (arg)
   call QuickfixOrGotoFile(WhatChangedLines(), a:arg)
 endfunction
 command! -nargs=* -complete=customlist,WhatChangedComplete QuicklyWhatChanged call WhatChangedQuickfixOrGotoFile(<q-args>)
-
-function! AnyLines (ArgLead)
-  let lines = GetMatches(MostRecentlyModifiedLines(a:ArgLead, 5), a:ArgLead)
-  let lines = Dedup(extend(lines, GetMatches(BufferLines(), a:ArgLead)))
-  let lines = Dedup(extend(lines, GetMatches(MruLines(), a:ArgLead)))
-  let lines = Dedup(extend(lines, GetMatches(WhatChangedLines(), a:ArgLead)))
-
-  if len(lines) == 0
-    let lines = extend(lines, FindLines(a:ArgLead))
-  endif
-
-  let lines = WithinPwd(lines)
-  let lines = RelativePath(lines)
-  return lines
-endfunction
 
 " --------------------------------------------------------------
 "  :QuicklyBufferDelete
@@ -372,11 +358,12 @@ command! -nargs=* -complete=customlist,FindComplete QuicklyFind call FindQuickfi
 "  :QuicklyAny
 " --------------------------------------------------------------
 function! AnyLines (ArgLead)
-  let lines = GetMatches(MruLines(), a:ArgLead)
+  let lines = GetMatches(MostRecentlyModifiedLines(a:ArgLead, 5), a:ArgLead)
   let lines = Dedup(extend(lines, GetMatches(BufferLines(), a:ArgLead)))
+  let lines = Dedup(extend(lines, GetMatches(MruLines(), a:ArgLead)))
+  let lines = Dedup(extend(lines, GetMatches(WhatChangedLines(), a:ArgLead)))
 
   if len(lines) == 0
-    " Only run FindLines if no matches from other two? For performance.
     let lines = extend(lines, FindLines(a:ArgLead))
   endif
 
@@ -384,6 +371,7 @@ function! AnyLines (ArgLead)
   let lines = RelativePath(lines)
   return lines
 endfunction
+
 function! AnyComplete (ArgLead, CmdLine, CursorPos)
   return ListComplete(AnyLines(a:ArgLead), a:ArgLead, a:CmdLine, a:CursorPos)
 endfunction
