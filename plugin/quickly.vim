@@ -1,6 +1,6 @@
 " quickly.vim - Quickly jump to files. Cozy :find, :buffer, and :oldfiles replacements.
 " Maintainer:   Shawn Axsom <axs221@gmail.com>
-" Version:      0.0.3
+" Version:      0.0.4
 " License:      MIT
 " Website:      https://github.com/axs221/vim-quickly
 
@@ -21,6 +21,9 @@ let g:quickly_open_quickfix_window = get(g:, 'quickly_open_quickfix_window', 1)
 let g:quickly_mru_file_path = get(g:, 'quickly_mru_file_path', $HOME."/.quickly_mru")
 
 
+" --------------------------------------------------------------
+"  Maybe - Return string or default of empty
+" --------------------------------------------------------------
 function! Maybe(str)
   let str = a:str
   if !exists('a:str')
@@ -28,6 +31,17 @@ function! Maybe(str)
   endif
 
   return str
+endfunction
+
+" --------------------------------------------------------------
+"  FirstWord - Return first word in string, or empty string
+" --------------------------------------------------------------
+function! FirstWord(str)
+  let firstArg = ''
+  if a:str != ''
+    let firstArg = split(a:str, ' ')[0]
+  endif
+  return firstArg
 endfunction
 
 
@@ -224,7 +238,9 @@ function! MostRecentlyModifiedLines (ArgLead, Count)
     return [ args[len(args) - 1] ]
   endif
 
-  let lines = split(system("find . -type d \\( -path ./.git -o -path ./node_modules \\) -prune -o -path '*" . argLead . "*' -print0 | xargs -0 ls -t | head -n " . a:Count), "\n")
+  let firstArg = FirstWord(argLead)
+
+  let lines = split(system("find . -type d \\( -path ./.git -o -path ./node_modules \\) -prune -o -path '*" . firstArg . "*' -print0 | xargs -0 ls -t | head -n " . a:Count), "\n")
   let lines = WithinPwd(lines)
   let lines = RelativePath(lines)
   return lines
